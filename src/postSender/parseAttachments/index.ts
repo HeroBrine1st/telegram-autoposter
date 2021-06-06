@@ -11,6 +11,7 @@ import getVideo from "./getVideo";
 import getDoc from "./getDoc";
 import getGif from "./getGif";
 import getCopyright from "./getCopyright";
+import CopyrightType from "../types/mediaTypes/CopyrightType";
 
 async function parseAttachments(post: any): Promise<MediaType> {
   const attachments = post.attachments;
@@ -39,7 +40,7 @@ async function parseAttachments(post: any): Promise<MediaType> {
     }
   }
 
-  let copyright;
+  let copyright: CopyrightType;
   if (post.copyright) {
     copyright = await getCopyright(post.copyright);
   }
