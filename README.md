@@ -5,6 +5,7 @@ Autoposting from VK to Telegram.
 
 * clone repo
 * ``npm install``
+* set up ``config.json``
 * ``npm run start``
 
 ## ``config.json`` parameters
