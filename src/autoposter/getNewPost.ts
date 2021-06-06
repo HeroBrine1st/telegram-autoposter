@@ -5,7 +5,7 @@ const lastPosts = {};
 
 async function getNewPost(groupId: number) {
   try {
-    const response = await vk.wall.get({ 'owner_id': groupId, 'count': 2 });
+    const response = await vk.wall.get({ 'owner_id': -groupId, 'count': 2 });
     let currentPost = response['items'][0];
     if (currentPost['is_pinned']) {
       currentPost = response['items'][1];

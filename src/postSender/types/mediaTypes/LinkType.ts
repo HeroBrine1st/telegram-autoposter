@@ -1,5 +1,3 @@
-import URLType from '../URLType';
-
-type LinkType = URLType;
+type LinkType = string;
 
 export default LinkType;

@@ -1,8 +1,6 @@
-import URLType from '../URLType';
-
 type DocType = {
   title: string;
-  url: URLType;
+  url: string;
 };
 
 export default DocType;
