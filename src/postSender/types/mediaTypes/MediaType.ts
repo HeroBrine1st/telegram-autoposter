@@ -3,6 +3,7 @@ import LinkType from './LinkType';
 import VideoType from './VideoType';
 import DocType from './DocType';
 import GifType from './GifType';
+import CopyrightType from './CopyrightType';
 
 type MediaType = {
   photos: PhotoType[];
@@ -10,6 +11,7 @@ type MediaType = {
   links: LinkType[];
   docs: DocType[];
   gifs: GifType[];
+  copyright: CopyrightType;
 };
 
 export default MediaType;
