@@ -1,8 +1,6 @@
-import URLType from '../URLType';
-
 type CopyrightType = {
   title: string;
-  url: URLType;
+  url: string;
 };
 
 export default CopyrightType;

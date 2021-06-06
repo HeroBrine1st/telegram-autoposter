@@ -1,8 +1,6 @@
-import URLType from '../URLType';
-
 type GifType = {
-  title: `${string}.gif`;
-  url: URLType
+  title: string;
+  url: string;
 };
 
 export default GifType;
