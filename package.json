@@ -1,0 +1,30 @@
+{
+  "name": "autoposter",
+  "version": "0.1.0",
+  "description": "Autoposter from VK groups to Telegram channel.",
+  "scripts": {
+    "start": "ts-node src/index.ts --module commonjs NODE_ENV=production",
+    "dev": "ts-node src/index.ts --module commonjs NODE_ENV=development"
+  },
+  "keywords": [
+    "vk",
+    "telegram",
+    "autoposter",
+    "autoposting",
+    "auto",
+    "posting"
+  ],
+  "author": "n3ktO",
+  "license": "ISC",
+  "dependencies": {
+    "conf": "^10.0.1",
+    "node-telegram-bot-api": "^0.53.0",
+    "vk-io": "^4.3.0",
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^15.12.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.2"
+  }
+}
