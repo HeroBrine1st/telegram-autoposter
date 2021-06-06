@@ -1,0 +1,17 @@
+{
+	"tokens": {
+		"vk": "1234567890123456789012345678901234567890abcdefghijklmnopqrstuwxyzabcdefghijklmnopqrst",
+		"telegram": "1234567890:ASKdjDJdHAD9dddud3r328d88DY3h3F"
+	},
+	"channel": -10012345678,
+	"groups": [
+		"club12345678",
+		"public87654321",
+		"mypublic"
+	],
+	"banWords": [
+		"курсы",
+		"низкая цена",
+		"низк(ая|ой) цен(а|е)"
+	]
+}
