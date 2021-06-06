@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "Autoposter from VK groups to Telegram channel.",
   "scripts": {
-    "start": "ts-node src/index.ts --module commonjs NODE_ENV=production",
-    "dev": "ts-node src/index.ts --module commonjs NODE_ENV=development"
+    "start": "ts-node src/index.ts NODE_ENV=production",
+    "dev": "ts-node src/index.ts NODE_ENV=development"
   },
   "keywords": [
     "vk",

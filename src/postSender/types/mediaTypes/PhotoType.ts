@@ -1,5 +1,3 @@
-import URLType from '../URLType';
-
-type PhotoType = URLType;
+type PhotoType = string;
 
 export default PhotoType;

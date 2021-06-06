@@ -10,8 +10,15 @@ import getLink from "./getLink";
 import getVideo from "./getVideo";
 import getDoc from "./getDoc";
 import getGif from "./getGif";
+import getCopyright from "./getCopyright";
+import config from "../../config";
+import getGroup from "./getGroup";
+import CopyrightType from "../types/mediaTypes/CopyrightType";
+import GroupType from "../types/mediaTypes/GroupType";
 
-async function parseAttachments(attachments: any[] = []): Promise<MediaType> {
+async function parseAttachments(post: any): Promise<MediaType> {
+  const attachments = post.attachments;
+
   const photos: PhotoType[] = [];
   const links: LinkType[] = [];
   const videos: VideoType[] = [];
@@ -36,7 +43,17 @@ async function parseAttachments(attachments: any[] = []): Promise<MediaType> {
     }
   }
 
-  return { photos, videos, docs, links, gifs };
+  let copyright: CopyrightType;
+  if (post.copyright) {
+    copyright = await getCopyright(post.copyright);
+  }
+
+  let group: GroupType;
+  if (config.get('groups').length > 1) {
+    group = await getGroup(post);
+  }
+
+  return { photos, videos, docs, links, gifs, copyright, group };
 }
 
 export default parseAttachments;
