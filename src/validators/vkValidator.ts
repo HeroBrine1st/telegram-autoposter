@@ -28,7 +28,7 @@ import logger from '../logger';
     if (groupsIds.length !== groups.length) {
       logger.warn('Incorrect groups are specified.');
     }
-    config.set('groups', groups.map(group => -group.id));
+    config.set('groups', groups.map(group => group.id));
   } catch (e) {
     logger.warn('VK token is incorrect.');
     process.kill(process.pid, 'SIGINT');
