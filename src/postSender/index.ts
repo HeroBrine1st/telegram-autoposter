@@ -15,7 +15,7 @@ async function send(post) {
   const text = prepareText(post.text);
   let linksText = getLinksText(media, text);
   try {
-    return await sendPost(photos, text, linksText);
+    return sendPost(photos, text, linksText);
   } catch (e) {
     logger.error(e);
   }

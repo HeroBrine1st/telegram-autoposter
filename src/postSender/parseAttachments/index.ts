@@ -17,7 +17,7 @@ import CopyrightType from "../types/mediaTypes/CopyrightType";
 import GroupType from "../types/mediaTypes/GroupType";
 
 async function parseAttachments(post: any): Promise<MediaType> {
-  const attachments = post.attachments;
+  const { attachments = [] } = post;
 
   const photos: PhotoType[] = [];
   const links: LinkType[] = [];
