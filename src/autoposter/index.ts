@@ -9,7 +9,7 @@ import send from '../postSender';
   }
 })();
 
-setTimeout(async () => {
+setInterval(async () => {
   for (let id of config.get('groups')) {
     getNewPost(id).then(post => {
       if (post) {
