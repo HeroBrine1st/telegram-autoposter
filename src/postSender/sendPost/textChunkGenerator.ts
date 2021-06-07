@@ -25,7 +25,7 @@ function* textGhunkGenerator(
           continue;
         }
 
-        if (text[i] === '<' && text.slice(i, i + 4) === '</a>') {
+        if (text[i] === '<') {
           if (text.slice(i, i + 4) === '</a>') {
             if (breakIndex && breakIndex > i) {
               break;
