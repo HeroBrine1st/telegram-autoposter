@@ -11,10 +11,10 @@ async function sendPost(
   text: string,
   linksText: string
 ) {
-  if (text.length + linksText.length === 0) return;
   if (hasBanWords(text) || hasBanWords(linksText)) return;
 
   if (photos.length === 0) {
+    if (text.length + linksText.length === 0) return;
     return sendText(text, linksText);
   } else if (photos.length === 1) {
     return sendPhoto(photos[0], text, linksText);
