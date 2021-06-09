@@ -1,7 +1,10 @@
+import prepareForHTML from '../prepareText/prepareForHTML';
 import DocType from '../types/mediaTypes/DocType';
 
 function addDocs(docs: DocType[], text: string, linksText: string): string {
-  const nonIncludedDocs = docs.filter(doc => !text.includes(doc.url));
+  const nonIncludedDocs = docs.filter(doc => {
+    return !text.includes(prepareForHTML(doc.url));
+  });
   if (nonIncludedDocs.length > 0) {
     linksText += '\n';
     linksText += '\n<b>🗂 Документы:</b>';
