@@ -1,7 +1,10 @@
 import VideoType from '../types/mediaTypes/VideoType';
+import prepareForHTML from '../prepareText/prepareForHTML';
 
 function addVideos(videos: VideoType[], text: string, linksText: string): string {
-  const nonIncludedVideos = videos.filter(video => !text.includes(video.url));
+  const nonIncludedVideos = videos.filter(video => {
+    return !text.includes(prepareForHTML(video.url))
+  });
   if (nonIncludedVideos.length > 0) {
     linksText += '\n';
     linksText += '\n<b>🎞 Видео:</b>';

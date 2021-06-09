@@ -6,13 +6,15 @@ async function getVideo(video: any): Promise<VideoType> {
 
   let link;
   try {
-    const videoData = (await vk.video.get({
+    const videos = await vk.video.get({
       'videos': `${ownerId}_${id}_${accessKey}}`
-    })).items[0];
-
+    });
+    const videoData = videos.items[0];
+    console.log(videoData);
     if (videoData.platform === 'YouTube') {
-      const regexp = /https\:\/\/www\.youtube\.com\/embed\/(.+)\?__ref=vk\.api/;
-      const [, youtubeId] = videoData.player.match(regexp);
+      const regexp = /https\:\/\/www\.youtube\.com\/embed\/(.+)\?.*/;
+      const result = videoData.player.match(regexp);
+      const youtubeId = result[1];
       link = `https://www.youtube.com/watch?v=${youtubeId}`;
     } else {
       link = `https://vk.com/video${ownerId}_${id}`;
