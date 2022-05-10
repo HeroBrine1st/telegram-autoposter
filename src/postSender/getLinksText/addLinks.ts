@@ -8,7 +8,7 @@ function addLinks(links: LinkType[], text: string, linksText: string): string {
   if (nonIncludedLinks.length > 0) {
     linksText += '\n';
     linksText += '\n<b>🔗 Ссылки:</b>';
-    for (let link of nonIncludedLinks) {
+    for (const link of nonIncludedLinks) {
       linksText += '\n' + link;
     }
   }

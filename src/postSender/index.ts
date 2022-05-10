@@ -1,6 +1,3 @@
-import parseAttachments from './parseAttachments';
-import prepareText from './prepareText';
-import getLinksText from './getLinksText';
 import sendPost from './sendPost';
 import logger from '../logger';
 
@@ -9,13 +6,8 @@ async function send(post) {
   if (post['copy_history']?.length > 0) return;
   if (post.attachments?.some(attachment => attachment.type === 'poll')) return;
 
-  const media = await parseAttachments(post);
-  const { photos } = media;
-
-  const text = prepareText(post.text);
-  let linksText = getLinksText(media, text);
   try {
-    return sendPost(photos, text, linksText);
+    sendPost(post);
   } catch (e) {
     logger.error(e);
   }

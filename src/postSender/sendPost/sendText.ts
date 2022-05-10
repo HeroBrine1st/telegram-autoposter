@@ -7,9 +7,9 @@ async function sendText(text: string, linksText: string) {
   const channel = config.get('channel');
   const posts = [];
   const textChunks = textGhunkGenerator(text, linksText);
-  let firstPost = true;
+  const firstPost = true;
   try {
-    for (let chunk of textChunks) {
+    for (const chunk of textChunks) {
       if (firstPost) {
         posts.push(await bot.sendMessage(channel, chunk, {
           'parse_mode': 'HTML'

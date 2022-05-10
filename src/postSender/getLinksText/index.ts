@@ -11,7 +11,8 @@ import addCopyright from './addCopyright';
 import addGroup from './addGroup';
 
 function getLinksText(media: MediaType, text: string): string {
-  const { links, videos, docs, gifs, copyright, group } = media;
+  const { links, docs, gifs, copyright, group } = media;
+  const videos = []
 
   const curriedAddLinks = curry(addLinks)(links, text);
   const curriedAddVideos = curry(addVideos)(videos, text);
@@ -20,7 +21,7 @@ function getLinksText(media: MediaType, text: string): string {
   const curriedAddCopyright = curry(addCopyright)(copyright);
   const curriedAddGroup = curry(addGroup)(group);
 
-  let result = pipe(
+  const result = pipe(
     curriedAddLinks,
     curriedAddVideos,
     curriedAddDocs,

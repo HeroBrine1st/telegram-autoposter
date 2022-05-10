@@ -1,7 +1,7 @@
 function* textGhunkGenerator(
   text: string,
   linksText: string,
-  photoPost: boolean = false
+  photoPost = false
 ) {
   const TEXT_POST_LIMIT = 4096;
   const PHOTO_POST_LIMIT = 1024;
@@ -12,7 +12,7 @@ function* textGhunkGenerator(
   let endIndex = 0;
 
   while (true) {
-    let postLimit = beginIndex === 0 ? FIRST_POST_LIMIT : TEXT_POST_LIMIT;
+    const postLimit = beginIndex === 0 ? FIRST_POST_LIMIT : TEXT_POST_LIMIT;
     let possibleEndIndex = beginIndex + postLimit;
     if (possibleEndIndex < text.length) {
       possibleEndIndex -= beginIndex === 0 ? 6 : 12;

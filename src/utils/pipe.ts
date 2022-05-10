@@ -1,6 +1,6 @@
 function pipe(...funcs: ((...args: any[]) => any)[]): any {
   return function (value: any) {
-    for (let func of funcs) {
+    for (const func of funcs) {
       value = func(value);
     }
     return value;

@@ -8,7 +8,7 @@ function addGifs(gifs: GifType[], text: string, linksText: string): string {
   if (nonIncludedGifs.length > 0) {
     linksText += '\n';
     linksText += '\n<b>🖼 Гифки:</b>';
-    for (let gif of nonIncludedGifs) {
+    for (const gif of nonIncludedGifs) {
       linksText += `\n<a href="${gif.url}">${gif.title}</a>`;
     }
   }

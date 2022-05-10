@@ -4,13 +4,13 @@ import getNewPost from './getNewPost';
 import send from '../postSender';
 
 (async function cacheLastPosts() {
-  for (let id of config.get('groups')) {
+  for (const id of config.get('groups')) {
     getNewPost(id);
   }
 })();
 
 setInterval(async () => {
-  for (let id of config.get('groups')) {
+  for (const id of config.get('groups')) {
     getNewPost(id).then(post => {
       if (post) {
         send(post);

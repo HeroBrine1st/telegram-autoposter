@@ -12,7 +12,7 @@ async function sendPhoto(photo: PhotoType, text: string, linksText: string) {
   const textChunks = textGhunkGenerator(text, linksText, true);
   let firstPost = true;
   try {
-    for (let chunk of textChunks) {
+    for (const chunk of textChunks) {
       if (firstPost) {
         posts.push(await bot.sendPhoto(channel, photo, {
           'caption': chunk,

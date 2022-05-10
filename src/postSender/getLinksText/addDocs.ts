@@ -8,7 +8,7 @@ function addDocs(docs: DocType[], text: string, linksText: string): string {
   if (nonIncludedDocs.length > 0) {
     linksText += '\n';
     linksText += '\n<b>🗂 Документы:</b>';
-    for (let doc of nonIncludedDocs) {
+    for (const doc of nonIncludedDocs) {
       linksText += `\n<a href="${doc.url}">${doc.title}</a>`;
     }
   }

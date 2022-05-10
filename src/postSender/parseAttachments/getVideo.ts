@@ -12,7 +12,7 @@ async function getVideo(video: any): Promise<VideoType> {
     const videoData = videos.items[0];
     console.log(videoData);
     if (videoData.platform === 'YouTube') {
-      const regexp = /https\:\/\/www\.youtube\.com\/embed\/(.+)\?.*/;
+      const regexp = /https:\/\/www\.youtube\.com\/embed\/(.+)\?.*/;
       const result = videoData.player.match(regexp);
       const youtubeId = result[1];
       link = `https://www.youtube.com/watch?v=${youtubeId}`;
