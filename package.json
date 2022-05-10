@@ -6,7 +6,7 @@
     "start": "ts-node src/index.ts NODE_ENV=production",
     "dev": "ts-node src/index.ts NODE_ENV=development",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "run-once": "ts-node src/sendOnce.ts"
+    "once": "ts-node src/sendOnce.ts"
   },
   "keywords": [
     "vk",
