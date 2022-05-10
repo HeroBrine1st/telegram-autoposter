@@ -9,6 +9,8 @@ import prepareText from '../prepareText';
 import { exec as ytdl } from 'youtube-dl-exec';
 import bot from '../../telegram';
 import config from '../../config';
+import fs from "fs"
+
 
 async function sendPost(post) {
   const media = await parseAttachments(post);
@@ -30,11 +32,20 @@ async function sendPost(post) {
     for (const video of videos) {
       const channel = config.get('channel');
       try {
-        const subprocess = await ytdl(video.url)
-        if (subprocess.exitCode !== 0) {
-          await bot.sendMessage(channel, `Couldn't download video ${video.url}`)
-          console.error(subprocess.stderr)
-        } else await bot.sendVideo(channel, subprocess.stdout)
+        const subprocess = ytdl(video.url)
+        const filename = `${new Date().getTime()}.tmp`
+        subprocess.stdout.pipe(fs.createWriteStream(filename))
+        subprocess.on("exit", (code) => {
+          if (code !== 0) {
+            bot.sendMessage(channel, `Couldn't download video ${video.url}`).catch(console.error)
+            console.error(subprocess.stderr)
+          } else {
+            bot.sendVideo(channel, filename).catch(console.error)
+          }
+          fs.unlink(filename, (err) => {
+            if (err !== null) console.error(err)
+          })
+        })
       } catch (e) {
         await bot.sendMessage(channel, `Couldn't download video ${video.url}`)
         console.error(e)
