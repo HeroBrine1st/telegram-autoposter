@@ -17,7 +17,7 @@ async function getNewPost(groupId: number) {
     }
 
     const lastPost = lastPosts[groupId];
-    if (lastPost <= currentPost.id) return;
+    if (lastPost !== undefined && lastPost >= currentPost.id) return;
 
     lastPosts[groupId] = currentPost.id;
     if (lastPost === undefined) return;
