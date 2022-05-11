@@ -19,11 +19,11 @@
   "author": "n3ktO",
   "license": "ISC",
   "dependencies": {
+    "await-spawn": "^4.0.2",
     "conf": "^10.0.1",
     "node-telegram-bot-api": "^0.53.0",
     "vk-io": "^4.3.0",
-    "winston": "^3.3.3",
-    "youtube-dl-exec": "^2.0.11"
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@types/node": "^15.12.0",

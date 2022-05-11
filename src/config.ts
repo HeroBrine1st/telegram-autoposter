@@ -8,7 +8,8 @@ const config = new Conf({
     },
     channel: 0,
     groups: [],
-    banWords: []
+    banWords: [],
+    "youtube-dl-binary": "youtube-dl"
   },
   configName: 'config',
   cwd: './'

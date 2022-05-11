@@ -3,8 +3,12 @@ import send from "./postSender";
 
 // For testing purposes
 (async () => {
-    const post = await getPostById(process.argv[2])
+    const id = process.argv[2]
+    const post = await getPostById(id)
     if (post) {
-        send(post);
+        await send(post);
+    } else {
+        console.error(`No post with id ${id} found`)
+        console.error(post)
     }
 })();

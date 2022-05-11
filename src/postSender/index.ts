@@ -7,7 +7,7 @@ async function send(post) {
   if (post.attachments?.some(attachment => attachment.type === 'poll')) return;
 
   try {
-    sendPost(post);
+    await sendPost(post);
   } catch (e) {
     logger.error(e);
   }
