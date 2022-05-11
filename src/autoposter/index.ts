@@ -11,7 +11,6 @@ import send from '../postSender';
 })();
 
 setInterval(async () => {
-  console.log("Tick")
   for (const id of config.get('groups')) {
     getNewPost(id).then(post => {
       if (post) {
