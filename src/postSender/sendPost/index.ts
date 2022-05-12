@@ -33,8 +33,8 @@ async function sendPost(post) {
     for (const video of videos) {
       const channel = config.get('channel');
       if(video.url.includes("youtube") || video.url.includes("youtu.be")) {
-        console.log(`Sending video ${video.url}`)
-        await bot.sendMessage(channel, video.url)
+        // console.log(`Sending video ${video.url}`)
+        // await bot.sendMessage(channel, video.url)
         continue
       }
       console.log(`Downloading video ${video.url}`)
@@ -56,6 +56,7 @@ async function sendPost(post) {
         console.error(e)
       }
     }
+    
   }
 }
 
