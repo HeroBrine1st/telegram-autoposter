@@ -1,7 +1,12 @@
+import { assert } from "console";
+
 export const TEXT_POST_LIMIT = 4096;
 export const PHOTO_POST_LIMIT = 1024;
-const LINK_REGEX = /\[([^[\]|]+)\|([^[\]]+)]/gm;
-const LINK_SUBSTITUTION = `<a href="https://vk.com/$1">$2</a>`
+// 4064 is the limit of letters in one word
+// 32, respectively, is the limit of whitespace characters between words
+// The sum of these numbers should be equal TEXT_POST_LIMIT
+// Zeroes needed for splitting word or whitespace between words without break
+const SPLIT_REGEX = /(\S{0,4064}\s{0,32})/gm
 
 function* textGhunkGenerator(
   text: string,
@@ -9,18 +14,16 @@ function* textGhunkGenerator(
   photoPost = false,
 ): Generator<string, void, undefined> {
   const fullText = (text + linksText)
-    .replace(LINK_REGEX, LINK_SUBSTITUTION) // This line speaks for itself, but just in case: Replace VK links to HTML links
   let currentIndex = 0;
-  const words = fullText.split(/(\S+\s+)/g)
+  const words = fullText.split(SPLIT_REGEX)
   let cache = "";
   while (currentIndex < words.length) {
-    if (cache.length <= TEXT_POST_LIMIT) {
-      const newLen = cache.length + words[currentIndex].length
-      if (newLen >= TEXT_POST_LIMIT) {
-        yield cache
-        cache = ""
-      } else cache += words[currentIndex++]
-    } // Else is not required as cache will not be lengthier than TEXT_POST_LIMIT
+    assert(cache.length <= TEXT_POST_LIMIT)
+    const newLen = cache.length + words[currentIndex].length
+    if (newLen >= TEXT_POST_LIMIT) {
+      yield cache
+      cache = ""
+    } else cache += words[currentIndex++]
   }
   yield cache
   if (photoPost && cache.length > PHOTO_POST_LIMIT) yield "" // To send photo in last message

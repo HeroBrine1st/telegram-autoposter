@@ -13,6 +13,7 @@ import spawn from 'await-spawn';
 
 
 async function sendPost(post) {
+  console.log(`Sending post ${post.id}`)
   const media = await parseAttachments(post);
   const text = prepareText(post.text);
   const { photos, videos } = media;
