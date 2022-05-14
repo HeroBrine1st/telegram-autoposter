@@ -2,12 +2,22 @@ import { assert } from "console";
 
 export const TEXT_POST_LIMIT = 4096;
 export const MEDIA_POST_LIMIT = 1024;
-// 4064 is the limit of letters in one word
+// 4064 is the limit of letters in one word.
 // 32, respectively, is the limit of whitespace characters between words
 // The sum of these numbers should be equal TEXT_POST_LIMIT
-// Zeroes needed for splitting word or whitespace between words without break
+// Zeroes needed to split word or whitespace between words without break
 const SPLIT_REGEX = /(\S{0,4064}\s{0,32})/gm
 
+
+/**
+ * Split text to chunks of TEXT_POST_LIMIT.
+ * Edge cases (numbers for examples):
+ * * Word with 4090 letters will be split by regex ^ and then joined
+ * * Word with 4090 letters and 30 whitespaces after will be split by regex and remaining so (looks like a bug, but it's very rare case => wontfix)
+ * * Word with 4097 or more letters will be split by regex ^ and  remaining so
+ * @param text Text to split
+ * @param hasMedia If set to true, last chank will be smaller than MEDIA_POST_LIMIT
+ */
 export default function* textGhunkGenerator(
   text: string,
   hasMedia = false,
