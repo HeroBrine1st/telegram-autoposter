@@ -29,7 +29,7 @@ async function sendPost(post: WallWallpostFull) {
   }));
 
   let errorText = "\n\n"
-  for (const video of videos.filter(it => (!it.url.includes("youtube") && !it.url.includes("youtu.be")))) {
+  for (const video of videos) {
     try {
       telegramMedia.push({
         "type": "video",
