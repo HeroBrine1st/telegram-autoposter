@@ -10,8 +10,8 @@ const SPLIT_REGEX = /(\S{0,4064}\s{0,32})/gm
 
 
 /**
- * Split text to chunks of TEXT_POST_LIMIT.
- * Edge cases (numbers for examples):
+ * Split text to chunks of TEXT_POST_LIMIT length.
+ * Edge cases (numbers for example):
  * * Word with 4090 letters will be split by regex ^ and then joined
  * * Word with 4090 letters and 30 whitespaces after will be split by regex and remaining so (looks like a bug, but it's very rare case => wontfix)
  * * Word with 4097 or more letters will be split by regex ^ and  remaining so
