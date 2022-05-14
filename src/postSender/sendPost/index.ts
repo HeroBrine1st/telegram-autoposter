@@ -1,6 +1,3 @@
-import sendText from './sendText';
-import sendPhoto from './sendPhoto';
-import sendPhotos from './sendPhotos';
 
 import hasBanWords from '../hasBanWords';
 import getLinksText from '../getLinksText';
@@ -9,56 +6,92 @@ import prepareText from '../prepareText';
 import bot from '../../telegram';
 import config from '../../config';
 import fs from "fs"
-import spawn from 'await-spawn';
+import downloadMedia from './downloadMedia';
+import textGhunkGenerator, { MEDIA_POST_LIMIT } from './textChunkGenerator';
+import logger from '../../logger';
+import { InputMedia } from 'node-telegram-bot-api';
+import { WallWallpostFull } from 'vk-io/lib/api/schemas/objects';
 
 
-async function sendPost(post) {
+async function sendPost(post: WallWallpostFull) {
   console.log(`Sending post ${post.id}`)
   const media = await parseAttachments(post);
   const text = prepareText(post.text);
-  const { photos, videos } = media;
+  const { photos } = media;
+  const videos = media.videos.filter(it => (!it.url.includes("youtube") && !it.url.includes("youtu.be")))
   const linksText = getLinksText(media, text);
   if (hasBanWords(text) || hasBanWords(linksText)) return;
 
-  if (photos.length === 0) {
-    if (text.length + linksText.length === 0) return;
-    await sendText(text, linksText);
-  } else if (photos.length === 1) {
-    await sendPhoto(photos[0], text, linksText);
-  } else {
-    await sendPhotos(photos, text, linksText);
+  const channel = config.get('channel');
+  const telegramMedia: InputMedia[] = photos.map(photo => ({
+    type: 'photo',
+    media: photo
+  }));
+
+  let errorText = "\n\n"
+  for (const video of videos.filter(it => (!it.url.includes("youtube") && !it.url.includes("youtu.be")))) {
+    try {
+      telegramMedia.push({
+        "type": "video",
+        "media": await downloadMedia(video.url)
+      })
+    } catch (e) {
+      logger.error(`Couldn't download video ${video.url}`)
+      errorText += `Couldn't download video ${video.url}`
+    }
   }
 
-  if (videos.length !== 0) {
-    console.log("Downloading videos")
-    for (const video of videos) {
-      const channel = config.get('channel');
-      if(video.url.includes("youtube") || video.url.includes("youtu.be")) {
-        // console.log(`Sending video ${video.url}`)
-        // await bot.sendMessage(channel, video.url)
-        continue
-      }
-      console.log(`Downloading video ${video.url}`)
-      try {
-        const binary = config.get("youtube-dl-binary")
-        const filename = `${new Date().getTime()}.tmp`
-        console.log(`Downloading video to ${filename} with binary ${binary}`)
-        await spawn(binary, ["-o", filename, video.url], {
-          "stdio": "inherit"
+  const hasMedia = telegramMedia.length !== 0
+  const sendAsGroup = telegramMedia.length >= 2
+  const textChunks = textGhunkGenerator(text + linksText + errorText, hasMedia);
+
+  try {
+    for (const chunk of textChunks) {
+      console.log(`Sending chunk ${chunk.length} symbols long`)
+      if (chunk.length <= MEDIA_POST_LIMIT && hasMedia) {
+        if (sendAsGroup) {
+          telegramMedia[0]['caption'] = chunk;
+          telegramMedia[0]['parse_mode'] = 'HTML';
+          await bot.sendMediaGroup(channel, telegramMedia)
+        } else {
+          const file = telegramMedia[0]
+          switch (file.type) {
+            case "photo": {
+              await bot.sendPhoto(channel, file.media, {
+                'caption': chunk,
+                'parse_mode': 'HTML'
+              })
+              break
+            }
+            case "video": {
+              await bot.sendVideo(channel, file.media, {
+                'caption': chunk,
+                'parse_mode': 'HTML'
+              })
+              break
+            }
+            default: {
+              logger.warn(`Runtime error: got invalid media type ${file["type"]}`)
+            }
+          }
+        }
+      } else {
+        await bot.sendMessage(channel, chunk, {
+          'parse_mode': 'HTML',
         })
-        console.log("Downloaded video from VK")
-        await bot.sendVideo(channel, filename)
-        console.log("Uploaded to Telegram")
-        fs.unlink(filename, (err) => {
-          if (err !== null) console.error(err); else console.log("Deleted temporary file")
-        })
-      } catch (e) {
-        await bot.sendMessage(channel, `Couldn't download video ${video.url}`)
-        console.error(e)
       }
     }
-    
+  } catch (e) {
+    const params = { photos, text, linksText };
+    logger.error(`An error occurred while executing "${sendPost.name}" with ${JSON.stringify(params)}.`);
+    logger.error(e)
+  } finally {
+    for (const video of telegramMedia.filter(it => it.type === "video")) {
+      fs.unlink(video.media, (err) => {
+        if (err !== null) logger.error(err); else logger.debug("Deleted temporary file")
+      })
+    }
   }
 }
 
-export default sendPost;
+export default sendPost;1

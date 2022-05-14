@@ -1,9 +1,10 @@
+import { WallWallpostFull } from 'vk-io/lib/api/schemas/objects';
 import logger from '../logger';
 import vk from '../vk';
 
 const lastPosts = {};
 
-async function getNewPost(groupId: number) {
+async function getNewPost(groupId: number): Promise<WallWallpostFull | undefined> {
   try {
     const response = await vk.wall.get({ 'owner_id': -groupId, 'count': 2 });
     if (response.count === 0) {
