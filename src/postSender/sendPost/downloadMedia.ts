@@ -1,5 +1,6 @@
 import spawn from "await-spawn"
 import config from "../../config"
+import logger from "../../logger"
 
 /**
  * Downloads media from URL to file using youtube-dl
@@ -10,10 +11,10 @@ import config from "../../config"
 export default async function downloadMedia(url: string): Promise<string> {
     const binary = config.get("youtube-dl-binary")
     const filepath = `${new Date().getTime()}.tmp` // Currently downloads to CWD
-    console.info(`Downloading video ${url} to ${filepath} with binary ${binary}`)
+    logger.info(`Downloading video ${url} to ${filepath} with binary ${binary}`)
     await spawn(binary, ["-o", filepath, url], {
         "stdio": "inherit" // Send child's stdout to parent's stdout
     })
-    console.info(`Downloaded video ${url}`)
+    logger.info(`Downloaded video ${url}`)
     return filepath
 }

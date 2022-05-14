@@ -14,7 +14,7 @@ import { WallWallpostFull } from 'vk-io/lib/api/schemas/objects';
 
 
 async function sendPost(post: WallWallpostFull) {
-  console.log(`Sending post ${post.id}`)
+  logger.info(`Sending post ${post.owner_id}_${post.id}`)
   const media = await parseAttachments(post);
   const text = prepareText(post.text);
   const { photos } = media;
@@ -28,12 +28,11 @@ async function sendPost(post: WallWallpostFull) {
     media: photo
   }));
 
-  let errorText = "\n\n"
   for (const video of videos) {
     try {
       const filename = await downloadMedia(video.url)
       if ((await fsAsync.stat(filename)).size > 50 * 1000 * 1000) {
-        console.info('Video size exceeded 50 MB')
+        logger.info('Video size exceeded 50 MB')
         media.videos.push(video)
         fs.unlink(filename, (err) => {
           if (err !== null) logger.error(err); else logger.debug("Deleted temporary file")
@@ -45,8 +44,8 @@ async function sendPost(post: WallWallpostFull) {
         })
       }
     } catch (e) {
-      logger.error(`Couldn't download video ${video.url}`)
-      errorText += `Couldn't download video ${video.url}`
+      logger.error(`Couldn't download video ${video.url}; Ignoring whole post`)
+      return
     }
   }
 
@@ -55,11 +54,11 @@ async function sendPost(post: WallWallpostFull) {
 
   const hasMedia = telegramMedia.length !== 0
   const sendAsGroup = telegramMedia.length >= 2
-  const textChunks = textGhunkGenerator(text + linksText + errorText, hasMedia);
+  const textChunks = textGhunkGenerator(text + linksText, hasMedia);
 
   try {
     for (const chunk of textChunks) {
-      console.log(`Sending chunk ${chunk.length} symbols long`)
+      logger.info(`Sending chunk ${chunk.length} symbols long`)
       if (chunk.length <= MEDIA_POST_LIMIT && hasMedia) {
         if (sendAsGroup) {
           telegramMedia[0]['caption'] = chunk;
@@ -94,9 +93,9 @@ async function sendPost(post: WallWallpostFull) {
       }
     }
   } catch (e) {
-    const params = { photos, text, linksText, id: post.id };
+    const params = { telegramMedia, media, text, linksText, id: post.id };
     logger.error(`An error occurred while executing "${sendPost.name}" with ${JSON.stringify(params)}.`);
-    logger.error(e)
+    logger.error(JSON.stringify(e))
   } finally {
     for (const video of telegramMedia.filter(it => it.type === "video")) {
       fs.unlink(video.media, (err) => {
