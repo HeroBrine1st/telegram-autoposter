@@ -11,9 +11,7 @@ import addCopyright from './addCopyright';
 import addGroup from './addGroup';
 
 function getLinksText(media: MediaType, text: string): string {
-  const { links, docs, gifs, copyright, group } = media;
-
-  const videos = media.videos.filter(it => it.url.includes("youtube") || it.url.includes("youtu.be"))
+  const { links, docs, gifs, copyright, group, videos } = media;
 
   const curriedAddLinks = curry(addLinks)(links, text);
   const curriedAddVideos = curry(addVideos)(videos, text);

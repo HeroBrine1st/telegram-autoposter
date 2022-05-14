@@ -5,7 +5,7 @@ import parseAttachments from '../parseAttachments';
 import prepareText from '../prepareText';
 import bot from '../../telegram';
 import config from '../../config';
-import fs from "fs"
+import fs, { promises as fsAsync } from "fs"
 import downloadMedia from './downloadMedia';
 import textGhunkGenerator, { MEDIA_POST_LIMIT } from './textChunkGenerator';
 import logger from '../../logger';
@@ -19,8 +19,8 @@ async function sendPost(post: WallWallpostFull) {
   const text = prepareText(post.text);
   const { photos } = media;
   const videos = media.videos.filter(it => (!it.url.includes("youtube") && !it.url.includes("youtu.be")))
-  const linksText = getLinksText(media, text);
-  if (hasBanWords(text) || hasBanWords(linksText)) return;
+  media.videos = media.videos.filter(it => it.url.includes("youtube") || it.url.includes("youtu.be"))
+  if (hasBanWords(text)) return;
 
   const channel = config.get('channel');
   const telegramMedia: InputMedia[] = photos.map(photo => ({
@@ -31,15 +31,27 @@ async function sendPost(post: WallWallpostFull) {
   let errorText = "\n\n"
   for (const video of videos) {
     try {
-      telegramMedia.push({
-        "type": "video",
-        "media": await downloadMedia(video.url)
-      })
+      const filename = await downloadMedia(video.url)
+      if ((await fsAsync.stat(filename)).size > 50 * 1000 * 1000) {
+        console.info('Video size exceeded 50 MB')
+        media.videos.push(video)
+        fs.unlink(filename, (err) => {
+          if (err !== null) logger.error(err); else logger.debug("Deleted temporary file")
+        })
+      } else {
+        telegramMedia.push({
+          "type": "video",
+          "media": filename
+        })
+      }
     } catch (e) {
       logger.error(`Couldn't download video ${video.url}`)
       errorText += `Couldn't download video ${video.url}`
     }
   }
+
+  const linksText = getLinksText(media, text);
+  if (hasBanWords(linksText)) return;
 
   const hasMedia = telegramMedia.length !== 0
   const sendAsGroup = telegramMedia.length >= 2
@@ -82,7 +94,7 @@ async function sendPost(post: WallWallpostFull) {
       }
     }
   } catch (e) {
-    const params = { photos, text, linksText };
+    const params = { photos, text, linksText, id: post.id };
     logger.error(`An error occurred while executing "${sendPost.name}" with ${JSON.stringify(params)}.`);
     logger.error(e)
   } finally {
@@ -94,4 +106,4 @@ async function sendPost(post: WallWallpostFull) {
   }
 }
 
-export default sendPost;1
+export default sendPost;
