@@ -23,10 +23,13 @@ async function sendPost(post: WallWallpostFull) {
   if (hasBanWords(text)) return;
 
   const channel = config.get('channel');
-  const telegramMedia: InputMedia[] = photos.map(photo => ({
-    type: 'photo',
-    media: photo
-  }));
+  const telegramMedia: InputMedia[] = [];
+  for (const photo of photos) {
+    telegramMedia.push({
+      type: 'photo',
+      media: await downloadMedia(photo)
+    })
+  }
 
   for (const video of videos) {
     try {
@@ -97,10 +100,11 @@ async function sendPost(post: WallWallpostFull) {
     logger.error(`An error occurred while executing "${sendPost.name}" with ${JSON.stringify(params)}.`);
     logger.error(JSON.stringify(e))
   } finally {
-    for (const video of telegramMedia.filter(it => it.type === "video")) {
-      fs.unlink(video.media, (err) => {
-        if (err !== null) logger.error(err); else logger.debug("Deleted temporary file")
-      })
+    for (const media of telegramMedia) {
+      if (await fsAsync.access(media.media).then(() => true).catch(() => false)) // Check if file exists
+        fs.unlink(media.media, (err) => {
+          if (err !== null) logger.error(err); else logger.debug("Deleted temporary file")
+        })
     }
   }
 }

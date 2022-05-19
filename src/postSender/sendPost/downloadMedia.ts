@@ -11,7 +11,7 @@ import logger from "../../logger"
 export default async function downloadMedia(url: string): Promise<string> {
     const binary = config.get("youtube-dl-binary")
     const filepath = `${new Date().getTime()}.tmp` // Currently downloads to CWD
-    logger.info(`Downloading video ${url} to ${filepath} with binary ${binary}`)
+    logger.info(`Downloading file ${url} to ${filepath} with binary ${binary}`)
     await spawn(binary, ["-o", filepath, url], {
         "stdio": "inherit" // Send child's stdout to parent's stdout
     })
