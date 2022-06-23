@@ -1,23 +1,30 @@
-
 import hasBanWords from '../hasBanWords';
 import getLinksText from '../getLinksText';
 import parseAttachments from '../parseAttachments';
 import prepareText from '../prepareText';
 import bot from '../../telegram';
 import config from '../../config';
-import fs, { promises as fsAsync } from "fs"
+import fs, { link, promises as fsAsync } from "fs"
 import downloadMedia from './downloadMedia';
 import textGhunkGenerator, { MEDIA_POST_LIMIT } from './textChunkGenerator';
 import logger from '../../logger';
 import { InputMedia } from 'node-telegram-bot-api';
 import { WallWallpostFull } from 'vk-io/lib/api/schemas/objects';
+import fetch from 'node-fetch'
+
+const LONG_POST_REGEX = /^(([^\n.?!]{1,150}))\n/ // flags aren't required
+const LONG_POST_PARSER_REGEX = /^([^\n.?!]+)\n|^(.+)/gm
+// These can be one, but javascript regexes have state so there should be no "g" flag if used once on a string
+const URL_REGEX = /(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*))/gm
+const DOMAIN_REGEX = /https?:\/\/(?:www\.)?([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6})\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
+const telegraphToken: string = config.get('tokens.telegraph')
 
 
 async function sendPost(post: WallWallpostFull) {
   logger.info(`Sending post ${post.owner_id}_${post.id}`)
   const media = await parseAttachments(post);
   const text = prepareText(post.text);
-  const { photos } = media;
+  const { photos, links } = media;
   const videos = media.videos.filter(it => (!it.url.includes("youtube") && !it.url.includes("youtu.be")))
   media.videos = media.videos.filter(it => it.url.includes("youtube") || it.url.includes("youtu.be"))
   if (hasBanWords(text)) return;
@@ -54,6 +61,74 @@ async function sendPost(post: WallWallpostFull) {
 
   const linksText = getLinksText(media, text);
   if (hasBanWords(linksText)) return;
+
+  const match = text.match(LONG_POST_REGEX)
+  if (match !== null && telegraphToken.length > 0) {
+    // Send as telegraph post
+    try {
+      const link = links[0] || `https://vk.com/wall${post.owner_id}_${post.id}`
+      const domain = DOMAIN_REGEX.exec(link)[1]
+      const res = await fetch(
+        "https://api.telegra.ph/createPage/",
+        {
+          body: JSON.stringify({
+            access_token: telegraphToken,
+            title: match[1],
+            author_name: domain,
+            author_url: link,
+            content: JSON.stringify([
+              ...[...(text + linksText).substring(text.indexOf("\n") + 1).matchAll(LONG_POST_PARSER_REGEX)].flatMap((v) => {
+                if (v[2] !== undefined) {
+                  return v[2].split(URL_REGEX).map((v) => {
+                    if(v.match(URL_REGEX) != null) {
+                      return {
+                        tag: "a",
+                        attrs: {
+                          "href": v
+                        },
+                        children: [v]
+                      }
+                    } else {
+                      return {
+                        tag: "p",
+                        children: [v]
+                      }
+                    }
+                  })
+                } else {
+                  return [{
+                    tag: "h4",
+                    children: [v[1]]
+                  }]
+                }
+              }),
+            ])
+          }),
+          headers: {
+            "Content-Type": "application/json"
+          },
+          method: "POST"
+        }
+      )
+      const json = await res.json()
+      if (!json.ok) {
+        throw new Error(json.error)
+      }
+      await bot.sendMessage(channel, json.result.url)
+    } catch (e) {
+      const params = { telegramMedia, media, linksText, id: post.id };
+      logger.error(`An error occurred while executing "${sendPost.name}" with ${JSON.stringify(params)}.`);
+      logger.error(JSON.stringify(e))
+    } finally {
+      for (const media of telegramMedia) {
+        if (await fsAsync.access(media.media).then(() => true).catch(() => false)) // Check if file exists
+          fs.unlink(media.media, (err) => {
+            if (err !== null) logger.error(err); else logger.debug("Deleted temporary file")
+          })
+      }
+    }
+    return
+  }
 
   const hasMedia = telegramMedia.length !== 0
   const sendAsGroup = telegramMedia.length >= 2

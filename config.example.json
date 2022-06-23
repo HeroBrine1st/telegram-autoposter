@@ -1,7 +1,8 @@
 {
   "tokens": {
     "vk": "1234567890123456789012345678901234567890abcdefghijklmnopqrstuwxyzabcdefghijklmnopqrst",
-    "telegram": "1234567890:ASKdjDJdHAD9dddud3r328d88DY3h3F"
+    "telegram": "1234567890:ASKdjDJdHAD9dddud3r328d88DY3h3F",
+    "telegraph": "4567890123456789012345678901234567890abcdefghijklm"
   },
   "channel": "@channelname",
   "groups": [

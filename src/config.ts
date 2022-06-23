@@ -5,6 +5,7 @@ const config = new Conf({
     tokens: {
       vk: "",
       telegram: "",
+      telegraph: "",
     },
     channel: 0,
     groups: [],

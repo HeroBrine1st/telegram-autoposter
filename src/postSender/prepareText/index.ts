@@ -3,7 +3,7 @@ import pipe from '../../utils/pipe';
 import formatVKLinks from './formatVKLinks';
 import prepareForHTML from './prepareForHTML';
 
-function prepareText(text: string) {
+function prepareText(text: string): string {
   return pipe(
     prepareForHTML,
     formatVKLinks
