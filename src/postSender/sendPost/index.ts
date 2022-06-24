@@ -6,11 +6,12 @@ import bot from '../../telegram';
 import config from '../../config';
 import fs, { link, promises as fsAsync } from "fs"
 import downloadMedia from './downloadMedia';
-import textGhunkGenerator, { MEDIA_POST_LIMIT } from './textChunkGenerator';
+import textGhunkGenerator, { MEDIA_POST_LIMIT, TEXT_POST_LIMIT } from './textChunkGenerator';
 import logger from '../../logger';
 import { InputMedia } from 'node-telegram-bot-api';
 import { WallWallpostFull } from 'vk-io/lib/api/schemas/objects';
 import fetch from 'node-fetch'
+import getPhoto from '../parseAttachments/getPhoto';
 
 const LONG_POST_REGEX = /^(([^\n.?!]{1,150}))\n/ // flags aren't required
 const LONG_POST_PARSER_REGEX = /^([^\n.?!]+)\n|^(.+)/gm
@@ -26,46 +27,58 @@ async function sendPost(post: WallWallpostFull) {
   const text = prepareText(post.text);
   const { photos, links } = media;
   const videos = media.videos.filter(it => (!it.url.includes("youtube") && !it.url.includes("youtu.be")))
-  media.videos = media.videos.filter(it => it.url.includes("youtube") || it.url.includes("youtu.be"))
   if (hasBanWords(text)) return;
+
+  const match = text.match(LONG_POST_REGEX)
+  const isLongpost = match !== null && telegraphToken.length > 0 && (
+    (videos.length + photos.length) > 0
+      ? text.length > MEDIA_POST_LIMIT :
+      text.length > TEXT_POST_LIMIT)
+  const title = match[1]
 
   const channel = config.get('channel');
   const telegramMedia: InputMedia[] = [];
-  for (const photo of photos) {
-    telegramMedia.push({
-      type: 'photo',
-      media: await downloadMedia(photo)
-    })
-  }
+  if (!isLongpost) {
+    media.videos = media.videos.filter(it => it.url.includes("youtube") || it.url.includes("youtu.be"))
+    for (const photo of photos) {
+      telegramMedia.push({
+        type: 'photo',
+        media: await downloadMedia(photo)
+      })
+    }
 
-  for (const video of videos) {
-    try {
-      const filename = await downloadMedia(video.url)
-      if ((await fsAsync.stat(filename)).size > 50 * 1000 * 1000) {
-        logger.info('Video size exceeded 50 MB')
-        media.videos.push(video)
-        fs.unlink(filename, (err) => {
-          if (err !== null) logger.error(err); else logger.debug("Deleted temporary file")
-        })
-      } else {
-        telegramMedia.push({
-          "type": "video",
-          "media": filename
-        })
+    for (const video of videos) {
+      try {
+        const filename = await downloadMedia(video.url)
+        if ((await fsAsync.stat(filename)).size > 50 * 1000 * 1000) {
+          logger.info('Video size exceeded 50 MB')
+          media.videos.push(video)
+          fs.unlink(filename, (err) => {
+            if (err !== null) logger.error(err); else logger.debug("Deleted temporary file")
+          })
+        } else {
+          telegramMedia.push({
+            "type": "video",
+            "media": filename
+          })
+        }
+      } catch (e) {
+        logger.error(`Couldn't download video ${video.url}; Ignoring whole post`)
+        return
       }
-    } catch (e) {
-      logger.error(`Couldn't download video ${video.url}; Ignoring whole post`)
-      return
     }
   }
 
   const linksText = getLinksText(media, text);
   if (hasBanWords(linksText)) return;
 
-  const match = text.match(LONG_POST_REGEX)
-  if (match !== null && telegraphToken.length > 0) {
-    // Send as telegraph post
-    try {
+  const hasMedia = telegramMedia.length !== 0
+  const sendAsGroup = telegramMedia.length >= 2
+  const textChunks = textGhunkGenerator(text + linksText, hasMedia);
+
+  try {
+    if (isLongpost) {
+      // Send as telegraph post
       const link = links[0] || `https://vk.com/wall${post.owner_id}_${post.id}`
       const domain = DOMAIN_REGEX.exec(link)[1]
       const res = await fetch(
@@ -73,14 +86,26 @@ async function sendPost(post: WallWallpostFull) {
         {
           body: JSON.stringify({
             access_token: telegraphToken,
-            title: match[1],
+            title: title,
             author_name: domain,
             author_url: link,
             content: JSON.stringify([
+              // Get photos if any, else get photo of first link if any
+              ...(photos.length > 0 ? photos : post.attachments
+                .filter(v => v.type === "link")
+                .filter(v => v.link.photo != undefined)
+                .map(v => getPhoto(v.link.photo))
+              ).slice(0, 1)
+                .map(v => ({
+                  tag: "img",
+                  attrs: {
+                    "src": v
+                  }
+                })),
               ...[...(text + linksText).substring(text.indexOf("\n") + 1).matchAll(LONG_POST_PARSER_REGEX)].flatMap((v) => {
                 if (v[2] !== undefined) {
                   return v[2].split(URL_REGEX).map((v) => {
-                    if(v.match(URL_REGEX) != null) {
+                    if (v.match(URL_REGEX) != null) {
                       return {
                         tag: "a",
                         attrs: {
@@ -114,27 +139,10 @@ async function sendPost(post: WallWallpostFull) {
       if (!json.ok) {
         throw new Error(json.error)
       }
+      console.log(json.result.url)
       await bot.sendMessage(channel, json.result.url)
-    } catch (e) {
-      const params = { telegramMedia, media, linksText, id: post.id };
-      logger.error(`An error occurred while executing "${sendPost.name}" with ${JSON.stringify(params)}.`);
-      logger.error(JSON.stringify(e))
-    } finally {
-      for (const media of telegramMedia) {
-        if (await fsAsync.access(media.media).then(() => true).catch(() => false)) // Check if file exists
-          fs.unlink(media.media, (err) => {
-            if (err !== null) logger.error(err); else logger.debug("Deleted temporary file")
-          })
-      }
+      return
     }
-    return
-  }
-
-  const hasMedia = telegramMedia.length !== 0
-  const sendAsGroup = telegramMedia.length >= 2
-  const textChunks = textGhunkGenerator(text + linksText, hasMedia);
-
-  try {
     for (const chunk of textChunks) {
       logger.info(`Sending chunk ${chunk.length} symbols long`)
       if (chunk.length <= MEDIA_POST_LIMIT && hasMedia) {
@@ -171,9 +179,17 @@ async function sendPost(post: WallWallpostFull) {
       }
     }
   } catch (e) {
-    const params = { telegramMedia, media, text, linksText, id: post.id };
+    const params = {
+      telegramMedia,
+      media,
+      // text,
+      // linksText, 
+      isLongpost,
+      id: post.id
+    };
     logger.error(`An error occurred while executing "${sendPost.name}" with ${JSON.stringify(params)}.`);
     logger.error(JSON.stringify(e))
+    logger.error(e.stack);
   } finally {
     for (const media of telegramMedia) {
       if (await fsAsync.access(media.media).then(() => true).catch(() => false)) // Check if file exists

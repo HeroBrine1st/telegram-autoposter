@@ -4,7 +4,7 @@ import vk from '../../vk';
 async function getVideo(video: any): Promise<VideoType> {
   const { 'owner_id': ownerId, id, 'access_key': accessKey, title } = video;
 
-  let link;
+  let link: string;
   try {
     const videos = await vk.video.get({
       'videos': `${ownerId}_${id}_${accessKey}}`

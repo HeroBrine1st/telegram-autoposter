@@ -27,7 +27,7 @@ async function parseAttachments(post: any): Promise<MediaType> {
 
   for (const attachment of attachments) {
     if (attachment.type === 'photo') {
-      photos.push(await getPhoto(attachment.photo));
+      photos.push(getPhoto(attachment.photo));
     } else if (attachment.type === 'video') {
       videos.push(await getVideo(attachment.video));
     } else if (attachment.type === 'doc') {

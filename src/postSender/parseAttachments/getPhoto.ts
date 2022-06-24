@@ -1,15 +1,8 @@
 import PhotoType from '../types/mediaTypes/PhotoType';
 
-async function getPhoto(photo: any): Promise<PhotoType> {
-  const sizes = photo.sizes;
-  const types = ['w', 'z', 'y', 'x', 'r', 'q', 'p', 'o', 'm', 's'];
-  for (const type of types) {
-    for (const size of sizes) {
-      if (size.type === type) {
-        return size.url;
-      }
-    }
-  }
+function getPhoto(photo: any): PhotoType {
+  // Copy, sort and get last
+  return photo.sizes.slice().sort((a: any, b: any) => a.width - b.width).pop().url
 }
 
 export default getPhoto;
