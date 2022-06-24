@@ -10,7 +10,9 @@ async function send(post: WallWallpostFull) {
   try {
     await sendPost(post);
   } catch (e) {
+    logger.error("An error occurred while sending post")
     logger.error(e);
+    logger.error(e.stack);
   }
 }
 

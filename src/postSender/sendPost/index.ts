@@ -34,7 +34,7 @@ async function sendPost(post: WallWallpostFull) {
     (videos.length + photos.length) > 0
       ? text.length > MEDIA_POST_LIMIT :
       text.length > TEXT_POST_LIMIT)
-  const title = match[1]
+  const title = match && match[1]
 
   const channel = config.get('channel');
   const telegramMedia: InputMedia[] = [];
