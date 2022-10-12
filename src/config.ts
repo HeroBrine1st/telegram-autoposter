@@ -10,7 +10,8 @@ const config = new Conf({
     channel: 0,
     groups: [],
     banWords: [],
-    "youtube-dl-binary": "youtube-dl"
+    "youtube-dl-binary": "youtube-dl",
+    adminChatId: 0, // TODO draft; Check if it can accept group IDs as well as user IDs
   },
   configName: 'config',
   cwd: './'
