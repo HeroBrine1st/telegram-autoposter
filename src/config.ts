@@ -11,7 +11,7 @@ const config = new Conf({
     groups: [],
     banWords: [],
     "youtube-dl-binary": "youtube-dl",
-    adminChatId: 0, // TODO draft; Check if it can accept group IDs as well as user IDs
+    adminChatId: 0, // 0 to disable
   },
   configName: 'config',
   cwd: './'
