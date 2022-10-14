@@ -12,9 +12,10 @@ const config = new Conf({
     banWords: [],
     "youtube-dl-binary": "youtube-dl",
     adminChatId: 0, // 0 to disable
+    useTelegraph: true, // false to split long posts to smaller chunks and send as multiple messages
   },
   configName: 'config',
-  cwd: './'
+  cwd: './',
 });
 
 export default config;

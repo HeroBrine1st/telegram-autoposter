@@ -38,7 +38,7 @@ async function sendPost(post: WallWallpostFull) {
 
   const channel = config.get('channel');
   const telegramMedia: InputMedia[] = [];
-  if (!isLongpost) {
+  if (!isLongpost || config.get("useTelegraph")) {
     media.videos = media.videos.filter(it => it.url.includes("youtube") || it.url.includes("youtu.be"))
     for (const photo of photos) {
       telegramMedia.push({
@@ -77,7 +77,7 @@ async function sendPost(post: WallWallpostFull) {
   const textChunks = textGhunkGenerator(text + linksText, hasMedia);
 
   try {
-    if (isLongpost) {
+    if (isLongpost && !config.get("useTelegraph")) {
       // Send as telegraph post
       const link = links[0] || `https://vk.com/wall${post.owner_id}_${post.id}`
       const domain = DOMAIN_REGEX.exec(link)[1]
