@@ -9,6 +9,8 @@ bot.on("message", async (msg) => {
         return
     if(config.get("adminChatId") === 0) // Disable
         return
+    if(msg.text && msg.text.startsWith("/start"))
+        return
 
     try {
         if (!msg.from)
