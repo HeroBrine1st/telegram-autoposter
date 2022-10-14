@@ -40,11 +40,14 @@ bot.on("message", async (msg) => {
                 message_id: sentMsg.message_id
             }
         )
+        await bot.sendMessage(msg.chat.id, "Спасибо за активность! Ваш пост принят на рассмотрение.", {
+            reply_to_message_id: msg.message_id
+        })
     } catch(e) {
         logger.error("An error occurred while processing suggestion from user:")
         logger.error(e)
         try { // This framework is not tolerant to errors so an inner try is here..
-            await bot.sendMessage(msg.chat.id, "An error occurred while processing your message.")
+            await bot.sendMessage(msg.chat.id, "Произошла ошибка при обработке вашего поста. Попробуйте позже или попробуйте предложить другой пост.")
         } catch(e2) {
             logger.error("Another error occurred while trying to tell user about error above:")
             logger.error(e2)
@@ -62,6 +65,8 @@ bot.on("callback_query", async (query) => {
         logger.debug(`Ignored event ${query.id} as it is forged`)
         return
     }
+    if(query.message.chat.id != config.get("adminChatId"))
+        return
     try {
         const msg = await bot.copyMessage(config.get("channel"), query.message.chat.id, query.message!.message_id)
         const chat = await bot.getChat(config.get("channel"))
