@@ -22,7 +22,13 @@ bot.on("message", async (msg) => {
                     [
                         {
                             text: "Accept",
-                            callback_data: `${(msg.from ? msg.from.id : 0)}`
+                            callback_data: `accept;${(msg.from ? msg.from.id : 0)}`
+                        }
+                    ],
+                    [
+                        {
+                            text: "Deny and remove (user won't be notified)",
+                            callback_data: `deny`
                         }
                     ],
                     (msg.from ? [
@@ -56,52 +62,79 @@ bot.on("message", async (msg) => {
 })
 
 bot.on("callback_query", async (query) => {
-    const authorId = +query.data
+    
     if (!query.message) {
         logger.debug(`Ignored event ${query.id} as it has no message attached`)
         return
     }
-    if(authorId == NaN) {
-        logger.debug(`Ignored event ${query.id} as it is forged`)
-        return
-    }
+
     if(query.message.chat.id != config.get("adminChatId"))
         return
-    try {
-        const msg = await bot.copyMessage(config.get("channel"), query.message.chat.id, query.message!.message_id)
-        const chat = await bot.getChat(config.get("channel"))
-        await bot.editMessageReplyMarkup({
-            inline_keyboard: [
-                (chat.username ? [{
-                    text: "Show message in channel",
-                    url: `https://t.me/${chat.username}/${msg.message_id}`
-                    }] : []),
-                (authorId != 0 ? [{
-                    text: "Show post author",
-                    url: `tg://user?id=${authorId}`
-                }] : [])
-            ]
-        },
-            {
-                chat_id: query.message.chat.id,
-                message_id: query.message!.message_id
+    const data = query.data.split(";")
+    switch(data[0]) { // Button type
+        case "accept": {
+            try {
+                const authorId = +data[1]
+                if(authorId == NaN) {
+                    logger.debug(`Ignored event ${query.id} as it is forged (${query.data})`)
+                    return
+                }
+                const msg = await bot.copyMessage(config.get("channel"), query.message.chat.id, query.message!.message_id)
+                const chat = await bot.getChat(config.get("channel"))
+                await bot.editMessageReplyMarkup({
+                    inline_keyboard: [
+                        (chat.username ? [{
+                            text: "Show message in channel",
+                            url: `https://t.me/${chat.username}/${msg.message_id}`
+                            }] : []),
+                        (authorId != 0 ? [{
+                            text: "Show post author",
+                            url: `tg://user?id=${authorId}`
+                        }] : [])
+                    ]
+                },
+                    {
+                        chat_id: query.message.chat.id,
+                        message_id: query.message!.message_id
+                    }
+                )
+                await bot.answerCallbackQuery(query.id)
+            } catch(e) {
+                logger.error("An error occurred while sending approved message to channel:")
+                logger.error(e)
+                try {
+                    await bot.answerCallbackQuery(query.id, {
+                        text: "An error occurred while sending message to channel. You should manually check whether it is sent.",
+                        show_alert: true
+                    })
+                } catch(e2) {
+                    logger.error("Another error occurred while trying to tell user about error above:")
+                    logger.error(e2)
+                    logger.error("Usually it can be ignored if bot is just started")
+                }
             }
-        )
-        await bot.answerCallbackQuery(query.id)
-    } catch(e) {
-        logger.error("An error occurred while sending approved message to channel:")
-        logger.error(e)
-        try {
-            await bot.answerCallbackQuery(query.id, {
-                text: "An error occurred while sending message to channel. You should manually check whether it is sent.",
-                show_alert: true
-            })
-        } catch(e2) {
-            logger.error("Another error occurred while trying to tell user about error above:")
-            logger.error(e2)
-            logger.error("Usually it can be ignored if bot is just started")
+            break
+        }
+        case "deny": {
+            try {
+                await bot.deleteMessage(query.message.chat.id, `${query.message.message_id}`)
+                await bot.answerCallbackQuery(query.id)
+            } catch(e) {
+                logger.error("An error occurred deleting denied message:")
+                logger.error(e)
+                try {
+                    await bot.answerCallbackQuery(query.id, {
+                        text: "An error occurred deleting denied message",
+                        show_alert: true
+                    })
+                } catch(e2) {
+                    logger.error("Another error occurred while trying to tell user about error above:")
+                    logger.error(e2)
+                }
+            }
         }
     }
+    
 })
 
 export default bot;
